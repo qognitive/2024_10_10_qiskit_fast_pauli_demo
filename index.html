@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>fast-pauli</title>
+		<link rel="icon" type="image/svg+xml" href="assets/q_bra.svg">
+
+
+		<link rel="stylesheet" href="dist/extra.css">
+
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+		<link rel="stylesheet" href="dist/white.css">
+		<!-- <link rel="stylesheet" href="dist/extra.css"> -->
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="dist/atom-one-light.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS_HTML"></script>
+
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<img src="assets/FP-banner.svg" alt="logo" style="width: 80%;">
+					<br>
+					from
+					<br>
+					<img src="assets/q_bra.svg" alt="q_bra" style="width: 15%; margin-right:-1%;">
+					<span style="font-size: 2em; vertical-align: top; color:#d9480f">ognitive</span>
+
+				</section>
+
+				<section>
+					<h2>Thanks</h2>
+					<style>
+						.headshot-grid {
+							display: grid;
+							grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+							gap: 20px;
+							justify-items: center;
+							align-items: center;
+						}
+						.headshot {
+							width: 150px;
+							height: 150px;
+							object-fit: cover;
+							border-radius: 50%;
+						}
+					</style>
+					<div class="headshot-grid">
+						<img src="assets/headshots/alex.jpeg" alt="Team member 1" class="headshot">
+						<img src="assets/headshots/eugene.jpeg" alt="Team member 2" class="headshot">
+						<img src="assets/headshots/james.jpeg" alt="Team member 3" class="headshot">
+						<img src="assets/headshots/jeff.jpeg" alt="Team member 4" class="headshot">
+						<img src="assets/headshots/sebastien.jpeg" alt="Team member 5" class="headshot">
+					</div>
+				</section>
+
+
+
+				<section>
+					<h2>Pauli Matrices</h2>
+					\[
+					\quad\quad\;
+					I = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}
+					\quad
+					\sigma_x = X = \begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}
+					\]
+					\[
+					\sigma_y = Y = \begin{bmatrix} 0 & -i \\ i & 0 \end{bmatrix}
+					\quad
+					\sigma_z = Z = \begin{bmatrix} 1 & 0 \\ 0 & -1 \end{bmatrix}
+					\]
+				</section>
+
+				<section>
+					<h2>Sparse Structure</h2>
+					\[
+					\text{Pauli String}\quad\mathcal{\hat{P}} = \bigotimes_i \sigma_i
+					\]
+
+					\[
+					\text{Pauli Operator}\quad\mathcal{\hat{O}} = \sum_{i} h_{i} \mathcal{\hat{P}}_i
+					\]
+
+					<ul>
+						<li>For $N$ qubits, naive operator is $2^{N} \times 2^{N}$ matrix</li>
+						<li>Pauli strings are sparse</li>
+						<li>Only $2^{N}$ non-zero elements in the operator</li>
+					</ul>
+
+					<aside class="notes">
+						<ul>
+							<li>More than just sparse, every column has only 1 element and all the elements are +/- 1 or +/- i</li>
+							<li>Operator is something of a rotation</li>
+						</ul>
+					</aside>
+				</section>
+
+				<section>
+					<h2>What we use at Qognitive</h2>
+					\[
+					\big( \sum_i h_i \mathcal{\hat{P}}_i \big) \ket{\psi_t}
+					\]
+					\[
+					\bra{\psi_t} \big( \sum_i h_{i} \mathcal{\hat{P}}_i \big) \ket{\psi_t}
+					\]
+
+					where $\ket{\psi_t} \in \mathbb{C}^{2^N \times \text{a lot}}$
+				</section>
+
+				<section>
+					<h2>How we do it?</h2>
+					<img src="assets/pauli_composer_ss.png" alt="pauli_composer" style="width: 60%;">
+					<br>
+					<p>TLDR: efficiently compute the non-zero elements for a Pauli string</p>
+					<a href="https://arxiv.org/abs/2301.00560">https://arxiv.org/abs/2301.00560</a>
+				</section>
+
+				<section>
+					<h2>Our Implementation</h2>
+
+					<div style="display: flex; justify-content: center; align-items: center;">
+						<div style="display: flex; flex-direction: column; margin-right: 30px;">
+							<img src="assets/Python-logo-notext.svg" alt="python" style="width: 150px; margin-bottom: 10px;">
+							<img src="assets/ISO_C++_Logo.svg" alt="C++" style="width: 150px;">
+						</div>
+						<div style="display: flex; align-items: center;">
+							<img src="assets/nanobind.jpg" alt="nanobind" style="width: 180px; margin-right: 20px;">
+							<img src="assets/fast_pauli_gh_page.png" alt="fast_pauli_gh_page" style="width: 400px;">
+						</div>
+					</div>
+
+				</section>
+
+				<section>
+					<h2>Simple example</h2>
+					<pre><code data-line-numbers>import fast_pauli as fp
+
+P1 = fp.PauliString('XYZ')
+P2 = fp.PauliString('YZX')
+
+# Access dim and n_qubits
+print(f"dim      = {P1.dim}")
+print(f"n_qubits = {P1.n_qubits}")
+
+# Add two Pauli strings. Returns a PauliOp
+P3 = P1 + P2
+
+# Multiply two Pauli strings.
+phase, new_string = P1 @ P2
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Not so simple example</h2>
+					<pre><code data-line-numbers>coeffs = np.array([0.5, 0.5], dtype=complex)
+pauli_strings = ['XYZ', 'YYZ']
+O = fp.PauliOp(coeffs, pauli_strings)
+
+# Apply O to a batch of 1000 states
+states = np.random.rand(8, 1000).astype(np.complex128)
+states/= np.linalg.norm(states, axis=0)[None,:]
+new_states = O.apply(states)
+
+# Compute the expectation value of O w.r.t states
+values = O.expectation_value(states)
+					</code></pre>
+				</section>
+
+				<section>
+					<section>
+						<h2>Benchmark: $\mathcal{\hat{O}} \ket{\psi}$</h2>
+						<div style="text-align:center">
+						   <embed src="assets/qiskit_pauli_op_apply.html" width="90%" height="600px" />
+						</div>
+					</section>
+					<section>
+						<!-- <h2>Benchmark Code: $\mathcal{\hat{O}} \ket{\psi}$</h2> -->
+						<div style="display: flex; flex-direction: column; gap: 20px;">
+							<div>
+								<h3>fast-pauli</h3>
+								<pre class="language-python"><code data-trim data-noescape data-line-numbers>
+									v = np.random.rand(2**N).astype(np.complex128)
+									op = fp.PauliOp(np.ones(len(pauli_strings)), pauli_strings)
+									op.apply(v)
+								</code></pre>
+							</div>
+							<div>
+								<h3>Qiskit</h3>
+								<pre class="language-python"><code data-trim data-noescape data-line-numbers>
+									v = Statevector(np.random.rand(2**N).astype(np.complex128))
+									op = SparsePauliOp(
+										pauli_strings, coeffs=np.ones(len(pauli_strings))
+										)
+									v.evolve(op)
+								</code></pre>
+							</div>
+						</div>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Benchmark: $\bra{\psi_t} \mathcal{\hat{O}} \ket{\psi_t}$</h2>
+
+						<iframe src="assets/qiskit_pauli_op_expectation_value_batch.html" width="90%" height="600px"></iframe>
+					</section>
+					<section>
+						<div style="display: flex; flex-direction: column; gap: 20px;">
+							<div>
+								<h3>fast-pauli</h3>
+								<pre class="language-python"><code data-trim data-noescape data-line-numbers>
+									op = fp.PauliOp(coeffs, pauli_strings)
+									op.expectation_value(v_batch)
+								</code></pre>
+							</div>
+							<div>
+								<h3>Qiskit</h3>
+								<pre class="language-python"><code data-trim data-noescape data-line-numbers>
+									op = SparsePauliOp(pauli_strings, coeffs=coeffs)
+									state_batch = [Statevector(v) for v in v_batch]
+									results = [s.expectation_value(op) for s in state_batch]  # noqa: F841
+								</code></pre>
+							</div>
+						</div>
+					</section>
+				</section>
+
+
+
+				<section>
+					<h2>Qiskit Integration</h2>
+					<pre><code data-trim data-noescape data-line-numbers>
+						# Convert a fast_pauli PauliOp to a Qiskit SparsePauliOp
+						O = fp.PauliOp([1], ['XYZ'])
+						qiskit_op = fp.to_qiskit(O)
+						fast_pauli_op = fp.from_qiskit(qiskit_op)
+
+						# Convert fast_pauli PauliString to a Qiskit Pauli object
+						P = fp.PauliString('XYZ')
+						qiskit_pauli = fp.to_qiskit(P)
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Up next</h2>
+					<div style="display: flex; align-items: center; justify-content: space-around;">
+						<img src="assets/Sigma-logo.svg" alt="Sigma" style="width: 30%;">
+						<ul>
+							<li>Always improving performance</li>
+							<li>Expanding supported operations</li>
+							<li>GPU support</li>
+							<li>Whatever the community needs</li>
+						</ul>
+					</div>
+				</section>
+
+				<section>
+					<h2>Check It Out</h2>
+					<img src="assets/Sigma-logo.svg" alt="Sigma" style="width: 30%;">
+					<img src="assets/fast_pauli_qr.svg" alt="fast-pauli" style="width: 30%;">
+				</section>
+
+			</div>
+		</div>
+
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/markdown/markdown.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+				slideNumber: true,
+				mathjax3: {
+					mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+					tex: {
+					  inlineMath: [
+						['$', '$'],
+						['\\(', '\\)'],
+					  ],
+					},
+					options: {
+					  skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+					},
+				  },
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMath.MathJax3, RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>
